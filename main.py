@@ -23,8 +23,21 @@ sectors = {
     "Nifty Energy": "^CNXENERGY",
     "Nifty Infra": "^CNXINFRA",
     "Nifty Media": "^CNXMEDIA"
-}
+}# ===============================
+# STOCKS INSIDE EACH SECTOR
+# ===============================
+message += f"\n🔥 Top Stocks in {top_sector}\n\n"
 
+for i, (stock, score) in enumerate(top_stocks, 1):
+    message += f"{i}. {stock} ({round(score,2)})\n"sector_stocks = {
+    "Nifty Bank": ["HDFCBANK.NS", "ICICIBANK.NS", "SBIN.NS", "AXISBANK.NS", "KOTAKBANK.NS"],
+    "Nifty IT": ["TCS.NS", "INFY.NS", "HCLTECH.NS", "WIPRO.NS", "TECHM.NS"],
+    "Nifty Auto": ["MARUTI.NS", "TATAMOTORS.NS", "M&M.NS", "BAJAJ-AUTO.NS", "EICHERMOT.NS"],
+    "Nifty Pharma": ["SUNPHARMA.NS", "DRREDDY.NS", "CIPLA.NS", "DIVISLAB.NS"],
+    "Nifty Metal": ["TATASTEEL.NS", "JSWSTEEL.NS", "HINDALCO.NS", "VEDL.NS"],
+    "Nifty PSU Bank": ["SBIN.NS", "PNB.NS", "BANKBARODA.NS", "CANBK.NS"],
+    "Nifty Energy": ["RELIANCE.NS", "ONGC.NS", "NTPC.NS", "POWERGRID.NS"]
+}
 # ===============================
 # MOMENTUM ENGINE
 # ===============================
@@ -57,9 +70,35 @@ def get_score(symbol):
 
     score = (mom_4w * 0.4 + mom_12w * 0.6) / vol
 
-    return score
+    return score 
+    def get_stock_momentum(symbol):
+    data = yf.download(symbol, period="6mo", progress=False)
 
+    if data.empty:
+        return 0
 
+    close = data["Close"]
+
+    if isinstance(close, pd.DataFrame):
+        close = close.iloc[:, 0]
+
+    if len(close) < 60:
+        return 0
+
+    mom_4w = (close.iloc[-1] / close.iloc[-20]) - 1
+    mom_12w = (close.iloc[-1] / close.iloc[-60]) - 1
+
+    return mom_4w * 0.5 + mom_12w * 0.5
+    top_sector = ranked[0][0]
+
+top_stocks = []
+
+if top_sector in sector_stocks:
+    for stock in sector_stocks[top_sector]:
+        score = get_stock_momentum(stock)
+        top_stocks.append((stock, score))
+
+    top_stocks = sorted(top_stocks, key=lambda x: x[1], reverse=True)[:3]
 # ===============================
 # MARKET REGIME FILTER
 # ===============================
